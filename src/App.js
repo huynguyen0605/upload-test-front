@@ -1,22 +1,47 @@
 import React, { Component } from 'react';
 import './App.scss';
+import axios from 'axios';
 
 class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
             selectedFile: null,
+            fileList: [],
         };
     };
+
+    componentDidMount() {
+        this.loadFileList();
+    };
+
+    loadFileList = () => {
+        axios.get('http://localhost:8000/fileLists').then(res => {
+            if (res.data && res.data.length > 0) {
+                console.log('huynvq::==========>fileListRes', res.data);
+                this.setState({
+                    fileList: res.data,
+                });
+            };
+        }).catch(err => {
+            console.log('huynvq::=====>', err);
+        });
+    };
+
     onChangeHandler = event => {
         console.log(event.target.files[0]);
         this.setState({
-            selectedFile: event.target.selectedFile[0],
+            selectedFile: event.target.files[0],
         })
     };
     onClickHandler = () => {
         const data = new FormData();
         data.append("file", this.state.selectedFile);
+        axios.post('http://localhost:8000/upload', data).then(res => {
+            console.log('huynvq::=======>uploadRes', res);
+            this.loadFileList();
+        }).catch(err => {
+        });
     };
     render() {
         return (
@@ -33,6 +58,20 @@ class App extends Component {
                     </div>
                     <button type="button" className="btn btn-success btn-block"
                         onClick={this.onClickHandler}>Upload</button>
+                    <div>
+                        {this.state.fileList.map(file => {
+                            return (
+                                <div key={file}>
+                                    <a
+                                        href={'http://localhost:8000/download/' + file}
+                                    >
+                                        {file}
+                                    </a>
+                                    <br />
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
         );
